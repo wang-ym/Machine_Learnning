@@ -63,37 +63,74 @@ Theta2_grad = zeros(size(Theta2));
 %
 
 
-a1=[ones(m,1) X];
-z2=Theta1*a1';
-a2=sigmoid(z2);
-a2=[ones(1,size(a2,2));a2];
-a3=Theta2*a2;
-h=sigmoid(a3);
+%a1=[ones(m,1) X];
+%z2=Theta1*a1';
+%a2=sigmoid(z2);
+%a2=[ones(1,size(a2,2));a2];
+%a3=Theta2*a2;
+%h=sigmoid(a3);
 
-yk=zeros(num_labels,m);
-for k=1:m
-  yk(y(k),k)=1;
+%yk=zeros(num_labels,m);
+%for k=1:m
+%  yk(y(k),k)=1;
+%end
+
+%J=-1*sum(sum(yk.*log(h)+(1-yk).*log(1-h)))/m; 
+
+%r=lambda*(sum(sum(Theta1(:,2:end).*Theta1(:,2:end)))+...
+%  sum(sum(Theta2(:,2:end).*Theta2(:,2:end))))/(2*m);
+
+%J=J+r;
+
+a1 = [ones(m, 1) X];
+z2 = a1 * Theta1';
+a2 = sigmoid(z2);
+a2 = [ones(m, 1) a2];
+z3 = a2 * Theta2';
+h = sigmoid(z3);
+
+yk = zeros(m, num_labels);
+for i = 1:m
+    yk(i, y(i)) = 1;
 end
 
-J=-1*sum(sum(yk.*log(h)+(1-yk).*log(1-h)))/m; 
+J = (1/m)* sum(sum(((-yk) .* log(h) - (1 - yk) .* log(1 - h))));
 
-r=lambda*(sum(sum(Theta1(:,2:end).*Theta1(:,2:end)))+...
-  sum(sum(Theta2(:,2:end).*Theta2(:,2:end))))/(2*m);
+r = (lambda / (2 * m)) * (sum(sum(Theta1(:, 2:end) .^ 2))
+    + sum(sum(Theta2(:, 2:end) .^ 2)));
+J = J + r;
+%delta3=h-yk;
+%delta2=Theta2'*delta3.*sigmoidGradient(a2);
 
-J=J+r;
-
-
-delta3=h-yk;
-delta2=Theta2'*delta3.*sigmoidGradient(a2);
-
-temp=delta2*a1;
-Theta1_grad=Theta1_grad+temp(2:end,:);
-Theta2_grad=Theta2_grad+delta3*(a2');
+%temp=delta2*a1;
+%Theta1_grad=Theta1_grad+temp(2:end,:);
+%Theta2_grad=Theta2_grad+delta3*(a2');
 
 
+for row = 1:m
+    a1 = [1 X(row,:)]';
+    z2 = Theta1 * a1;
+    a2 = sigmoid(z2);
+    a2 = [1; a2];
+    z3 = Theta2 * a2;
+    a3 = sigmoid(z3);
 
+    z2 = [1; z2];
+    delta3 = a3 - yk'(:, row);
+    delta2 = (Theta2' * delta3) .* sigmoidGradient(z2);
+    delta2 = delta2(2:end);
 
+    Theta1_grad = Theta1_grad + delta2 * a1';
+    Theta2_grad = Theta2_grad + delta3 * a2';
 
+end
+
+Theta1_grad = Theta1_grad ./ m;
+Theta1_grad(:, 2:end) = Theta1_grad(:, 2:end) ...
+        + (lambda/m) * Theta1(:, 2:end);
+Theta2_grad = Theta2_grad ./ m;
+Theta2_grad(:, 2:end) = Theta2_grad(:, 2:end) + ...
+        + (lambda/m) * Theta2(:, 2:end);
 % -------------------------------------------------------------
 
 % =========================================================================
